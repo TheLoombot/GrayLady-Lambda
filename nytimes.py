@@ -48,25 +48,23 @@ def parse(data):
 
 		if piece.get('image'):
 			inner_html = row.css('td').extract_first()
-			inner_html = re.sub('<td(.*?)>', '', inner_html).strip('</td>').strip()
+			inner_html = clean_tags(['td', 'strong'], inner_html)
 
 			if not piece.get('number'):
 				headline = ' '.join(row.css('strong::text').extract())
 				piece['number'], piece['title'] = [x.strip() for x in headline.split('.', 1)]
 				piece['number'] = int(piece['number'])
 
-				inner_html = clean_text_part(inner_html, row)
-				
-			piece['pieceTextContent'] += html2text(inner_html).strip()
+				inner_html = inner_html.split('.', 1)[-1].strip()
+
+			piece['pieceTextContent'] += html2text(inner_html).replace('\n', ' ').strip() + '\n'
 
 	return briefing, pieces
 
-def clean_text_part(inner_html, row):
-	rgx = '>(\d+)\.'
-	strong = row.css('strong::text')
-
-	inner_html = inner_html.split('</strong>', 1)[-1] if len(strong) > 1 else re.sub(rgx, '', inner_html)
-	return inner_html.strip()
+def clean_tags(tags, html):
+	for tag in tags:
+		html = re.sub('<%s(.*?)>' % tag, '', html).replace('</%s>' % tag, '').strip()
+	return html
 
 def initiate_piece():
 	return {

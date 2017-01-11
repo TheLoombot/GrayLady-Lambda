@@ -11,14 +11,9 @@ def main():
 	with open('sample.html', 'r') as html:
 		data = html.read()
 
-
 	briefing, pieces = nytimes.parse(data)
-	# pieces = [pieces[8]]
-
-	piece_ids = []
-	[piece_ids.append(contentful.create_piece(piece)) for piece in pieces]
-
-
-	# response = contentful.create_briefings(briefing)
+	
+	briefing['piece'] = [contentful.create_piece(piece) for piece in pieces]
+	response = contentful.create_briefings(briefing)
 
 main()

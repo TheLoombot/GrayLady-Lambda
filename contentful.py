@@ -11,14 +11,9 @@ locale = 'en-US'
 url = 'https://api.contentful.com/spaces/%s/entries' % space_id
 assets_url = 'https://api.contentful.com/spaces/%s/assets' % space_id
 process_asset_url = 'https://api.contentful.com/spaces/%s/assets/%s/files/%s/process'
-publish_asset_url = 'https://api.contentful.com/spaces/%s/assets/%s'
+publish_asset_url = 'https://api.contentful.com/spaces/%s/assets/%s/published'
 
-def create_piece(piece):
-	print('Creating Piece: %s' % piece['title'])
-	piece['image'] = create_asset(piece['image'], piece.pop('title'), piece['imageCaption'])
-
-	response = requests.post(url, data=contentful_payload(piece), headers=contentful_headers('piece'))
-	return response
+publish_entry_url = 'https://api.contentful.com/spaces/%s/entries/%s/published'
 
 def create_asset(image, title, caption):
 	asset = {
@@ -38,25 +33,28 @@ def create_asset(image, title, caption):
 	process_asset(asset_id)
 	publish_asset(asset_id)
 
-	return asset_param(asset_id)
+	return contentful_link(asset_id, 'Asset')
 
 def process_asset(asset_id):
 	return requests.put(process_asset_url % (space_id, asset_id, locale), headers=contentful_headers(''))
 
-def publish_asset(asset_id):
-	return requests.put(process_asset_url % (space_id, asset_id, locale), headers=contentful_headers(''))
+def create_piece(piece):
+	print('Creating Piece: %s' % piece['title'])
+	piece['image'] = create_asset(piece['image'], piece.pop('title'), piece['imageCaption'])
 
-def asset_param(asset_id):
-	return {
-		'sys': {
-			'type': 'Link',
-			'linkType': 'Asset',
-			'id': asset_id
-		}
-	}
+	response = requests.post(url, data=contentful_payload(piece), headers=contentful_headers('piece'))
+	data = json.loads(response.text)
+
+	piece_id = data['sys']['id']
+	publish_entry(piece_id)
+	return contentful_link(piece_id, 'Entry')
 
 def create_briefings(briefing):
 	response = requests.post(url, data=contentful_payload(briefing), headers=contentful_headers('briefing'))
+	data = json.loads(response.text)
+
+	briefing_id = data['sys']['id']
+	publish_entry(briefing_id)
 	return response
 
 def contentful_headers(content_type):
@@ -68,3 +66,21 @@ def contentful_headers(content_type):
 
 def contentful_payload(resource):
 	return json.dumps({'fields' : {key: {locale: resource[key]} for key in resource}})
+
+def contentful_link(sys_id, link_type):
+	return {
+		'sys': {
+			'type': 'Link',
+			'linkType': link_type,
+			'id': sys_id
+		}
+	}
+
+def publish_entry(sys_id):
+	return requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1))
+
+def publish_asset(sys_id):
+	return requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2))
+
+def publish_header(version):
+	return dict(contentful_headers(''), **{'X-Contentful-Version': unicode(version)})
