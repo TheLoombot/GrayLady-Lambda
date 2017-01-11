@@ -9,6 +9,8 @@ def parse(data):
 	body = Selector(text=data.decode('UTF-8'))
 	css = 'table table[style="padding:0;background-color:#fff"] tr'
 	detection_strings = ['_____', 'Photographs may appear out of order']
+	rgx = '>(\d+)\.'
+	image_url = 'https://static01.nyt.com'
 
 	briefing = {}
 	briefing['briefingDate'] = time.strftime('%Y-%m-%d')
@@ -25,15 +27,16 @@ def parse(data):
 				briefing['briefingAuthor'] = author.replace('By ', '')
 				break
 
-	return briefing, []
-
 	pieces = []
 	piece = initiate_piece()
 	for row in body.css(css):
 		image_tag = row.css('td img::attr(src)').extract_first()
 		if image_tag:
-			piece['Image'] = image_tag.strip()
-			piece['Image Caption'] = row.css('td span::text').extract_first().strip()
+			image = image_tag.strip().split(image_url)[-1]
+			piece['image'] = image_url + image.replace('-articleLarge.jpg', '-superJumbo.jpg')
+
+			caption = row.css('td span::text').extract_first().encode('utf-8')
+			piece['imageCaption'] = caption.split(' — ', 1)[0].strip()
 
 			continue
 
@@ -43,17 +46,22 @@ def parse(data):
 			piece = piece = initiate_piece()
 			continue
 
-		if piece.get('Image'):
+		if piece.get('image'):
 			html = row.css('td').extract_first()
 			html = re.sub('<td(.*?)>', '', html).strip('</td>').strip()
 
-			markdowm = html2text(html).replace('\\. ****', '. ')
-			piece['Text Content'] += markdowm.strip()
+			if not piece.get('number'):
+				number = re.findall(rgx, html)[0].strip()
+				piece['number'] = int(number)
+				
+				html = re.sub(rgx, '', html)
+
+			piece['pieceTextContent'] += html2text(html).strip()
 
 	return briefing, pieces
 
 def initiate_piece():
-	piece = {}
-	piece['Text Content'] = ''
-
-	return piece
+	return {
+		'date': time.strftime('%Y-%m-%d'),
+		'pieceTextContent': ''
+	}
