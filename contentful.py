@@ -14,14 +14,15 @@ process_asset_url = 'https://api.contentful.com/spaces/%s/assets/%s/files/%s/pro
 publish_asset_url = 'https://api.contentful.com/spaces/%s/assets/%s'
 
 def create_piece(piece):
-	piece['image'] = create_asset(piece['image'], piece['number'], piece['imageCaption'])
+	print('Creating Piece: %s' % piece['title'])
+	piece['image'] = create_asset(piece['image'], piece.pop('title'), piece['imageCaption'])
 
 	response = requests.post(url, data=contentful_payload(piece), headers=contentful_headers('piece'))
 	return response
 
 def create_asset(image, title, caption):
 	asset = {
-		'title': str(title),
+		'title': title,
 		'description': caption,
 		'file': {
 			'contentType': 'image/jpg',
@@ -34,8 +35,8 @@ def create_asset(image, title, caption):
 	data = json.loads(response.text)
 
 	asset_id = data['sys']['id']
-	process_asset(response)
-	publish_asset(response)
+	process_asset(asset_id)
+	publish_asset(asset_id)
 
 	return asset_param(asset_id)
 

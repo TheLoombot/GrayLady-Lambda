@@ -9,7 +9,6 @@ def parse(data):
 	body = Selector(text=data.decode('UTF-8'))
 	css = 'table table[style="padding:0;background-color:#fff"] tr'
 	detection_strings = ['_____', 'Photographs may appear out of order']
-	rgx = '>(\d+)\.'
 	image_url = 'https://static01.nyt.com'
 
 	briefing = {}
@@ -41,24 +40,33 @@ def parse(data):
 			continue
 
 		if [x for x in row.css('em::text, td::text').extract() for y in detection_strings if y in x.strip()]:
+			
 			pieces.append(piece)
-
 			piece = piece = initiate_piece()
+
 			continue
 
 		if piece.get('image'):
-			html = row.css('td').extract_first()
-			html = re.sub('<td(.*?)>', '', html).strip('</td>').strip()
+			inner_html = row.css('td').extract_first()
+			inner_html = re.sub('<td(.*?)>', '', inner_html).strip('</td>').strip()
 
 			if not piece.get('number'):
-				number = re.findall(rgx, html)[0].strip()
-				piece['number'] = int(number)
-				
-				html = re.sub(rgx, '', html)
+				headline = ' '.join(row.css('strong::text').extract())
+				piece['number'], piece['title'] = [x.strip() for x in headline.split('.', 1)]
+				piece['number'] = int(piece['number'])
 
-			piece['pieceTextContent'] += html2text(html).strip()
+				inner_html = clean_text_part(inner_html, row)
+				
+			piece['pieceTextContent'] += html2text(inner_html).strip()
 
 	return briefing, pieces
+
+def clean_text_part(inner_html, row):
+	rgx = '>(\d+)\.'
+	strong = row.css('strong::text')
+
+	inner_html = inner_html.split('</strong>', 1)[-1] if len(strong) > 1 else re.sub(rgx, '', inner_html)
+	return inner_html.strip()
 
 def initiate_piece():
 	return {

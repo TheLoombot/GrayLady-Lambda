@@ -13,7 +13,7 @@ def main():
 
 
 	briefing, pieces = nytimes.parse(data)
-	pieces = [pieces[1]]
+	# pieces = [pieces[8]]
 
 	piece_ids = []
 	[piece_ids.append(contentful.create_piece(piece)) for piece in pieces]
