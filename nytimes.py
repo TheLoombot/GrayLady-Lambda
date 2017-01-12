@@ -4,38 +4,29 @@ from parsel import Selector
 import re
 from html2text import html2text
 import time
+import requests
 
-def parse(data):
-	body = Selector(text=data.decode('UTF-8'))
-	css = 'table table[style="padding:0;background-color:#fff"] tr'
+def parse(body):
+	document = Selector(text=body)
+	css = 'table.layout-300.te-600[style="padding: 0; background-color: #fff;"]'
+	table = document.css(css)[0]
+
 	detection_strings = ['_____', 'Photographs may appear out of order']
 	image_url = 'https://static01.nyt.com'
 
-	briefing = {}
-	briefing['briefingDate'] = time.strftime('%Y-%m-%d')
-	for row in body.css(css):
-		title = row.css('a[style*="font-size:32px;line-height:36px;"]::text').extract_first()
-		if title:
-			briefing['briefingTitle'] = title.strip()
-			continue
-
-		if briefing.get('briefingTitle') and not briefing.get('briefingAuthor'):
-			author = row.css('h6::text').extract_first().strip()
-			
-			if author:
-				briefing['briefingAuthor'] = author.replace('By ', '')
-				break
+	briefing = {
+		'briefingDate': time.strftime('%Y-%m-%d'),
+		'briefingTitle': table.css('a::text').extract_first().strip(),
+		'briefingAuthor': table.xpath('//h6[contains(text(), "By ")]//text()').extract_first().replace('By ', '').strip()
+	}
 
 	pieces = []
 	piece = initiate_piece()
-	for row in body.css(css):
+	for row in table.css('tr'):
 		image_tag = row.css('td img::attr(src)').extract_first()
 		if image_tag:
-			image = image_tag.strip().split(image_url)[-1]
-			piece['image'] = image_url + image.replace('-articleLarge.jpg', '-superJumbo.jpg')
-
-			caption = row.css('td span::text').extract_first().encode('utf-8')
-			piece['imageCaption'] = caption.split(' — ', 1)[0].strip()
+			piece['image'] = image_tag.replace('-articleLarge.jpg', '-superJumbo.jpg')
+			piece['imageCaption'] = row.css('td span::text').extract_first().encode('utf-8').strip()
 
 			continue
 
@@ -71,3 +62,11 @@ def initiate_piece():
 		'date': time.strftime('%Y-%m-%d'),
 		'pieceTextContent': ''
 	}
+
+def get_complete_briefings(body):
+	data = Selector(text=body.decode('UTF-8'))
+
+	link = data.xpath('//a[text()="Browser"]//@href').extract_first()
+	response = requests.get(link)
+
+	return response.text
