@@ -12,7 +12,6 @@ def parse(body):
 	table = document.css(css)[0]
 
 	detection_strings = ['_____', 'Photographs may appear out of order']
-	image_url = 'https://static01.nyt.com'
 
 	briefing = {
 		'briefingDate': time.strftime('%Y-%m-%d'),

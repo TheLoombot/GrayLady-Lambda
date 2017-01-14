@@ -287,7 +287,12 @@ def iterfind(elem, path, namespaces=None):
 def find(elem, path, namespaces=None):
     it = iterfind(elem, path, namespaces)
     try:
-        return next(it)
+        try:
+            _next = it.next
+        except AttributeError:
+            return next(it)
+        else:
+            return _next()
     except StopIteration:
         return None
 

@@ -95,7 +95,6 @@ _find_external_links = etree.XPath(
      "descendant-or-self::x:a[normalize-space(@href) and substring(normalize-space(@href),1,1) != '#']"),
     namespaces={'x':XHTML_NAMESPACE})
 
-
 class Cleaner(object):
     """
     Instances cleans the document of each of the possible offending
@@ -113,10 +112,7 @@ class Cleaner(object):
         Removes any comments.
 
     ``style``:
-        Removes any style tags.
-
-    ``inline_style``
-        Removes any style attributes.  Defaults to the value of the ``style`` option.
+        Removes any style tags or attributes.
 
     ``links``:
         Removes any ``<link>`` tags
@@ -195,7 +191,6 @@ class Cleaner(object):
     javascript = True
     comments = True
     style = False
-    inline_style = None
     links = True
     meta = True
     page_structure = True
@@ -220,8 +215,6 @@ class Cleaner(object):
                 raise TypeError(
                     "Unknown parameter: %s=%r" % (name, value))
             setattr(self, name, value)
-        if self.inline_style is None and 'inline_style' not in kw:
-            self.inline_style = self.style
 
     # Used to lookup the primary URL for a given tag that is up for
     # removal:
@@ -287,9 +280,9 @@ class Cleaner(object):
                             del attrib[aname]
             doc.rewrite_links(self._remove_javascript_link,
                               resolve_base_href=False)
-            # If we're deleting style then we don't have to remove JS links
-            # from styles, otherwise...
-            if not self.inline_style:
+            if not self.style:
+                # If we're deleting style then we don't have to remove JS links
+                # from styles, otherwise...
                 for el in _find_styled_elements(doc):
                     old = el.get('style')
                     new = _css_javascript_re.sub('', old)
@@ -299,7 +292,6 @@ class Cleaner(object):
                         del el.attrib['style']
                     elif new != old:
                         el.set('style', new)
-            if not self.style:
                 for el in list(doc.iter('style')):
                     if el.get('type', '').lower().strip() == 'text/javascript':
                         el.drop_tree()
@@ -322,7 +314,6 @@ class Cleaner(object):
             kill_tags.add(etree.ProcessingInstruction)
         if self.style:
             kill_tags.add('style')
-        if self.inline_style:
             etree.strip_attributes(doc, 'style')
         if self.links:
             kill_tags.add('link')
