@@ -5,11 +5,14 @@ import re
 from html2text import html2text
 import time
 import requests
+import quopri
 
 def parse(body):
 	document = Selector(text=body)
-	css = 'table.layout-300.te-600[style="padding: 0; background-color: #fff;"]'
-	table = document.css(css)[0]
+	title = document.css('title::text').extract_first()
+
+	xpath = '//table[.//table[.//a[contains(text(), "%s")]]]' % title
+	table = document.xpath(xpath)[-1]
 
 	detection_strings = ['_____', 'Photographs may appear out of order']
 
@@ -63,6 +66,7 @@ def initiate_piece():
 	}
 
 def get_complete_briefings(body):
+	body = quopri.decodestring(body)
 	data = Selector(text=body.decode('UTF-8'))
 
 	link = data.xpath('//a[text()="Browser"]//@href').extract_first()

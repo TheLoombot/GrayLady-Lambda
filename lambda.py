@@ -8,13 +8,16 @@ sys.path.insert(0, helpers_path)
 import json
 import nytimes
 import contentful
+import email
 
-print('Loading function')
-
-
+print('Loading lambda function')
 def lambda_handler(event, context):
 	message = event['Records'][0]['Sns']['Message']
-	print("From SNS: " + message)
+	print(message)
+
+	content = message['content']
+	mail = email.message_from_string(content)
+	message = mail.get_payload()[1].get_payload()
 
 	response = nytimes.get_complete_briefings(message)
 	briefing, pieces = nytimes.parse(response)
