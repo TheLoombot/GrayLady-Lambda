@@ -21,7 +21,7 @@ def lambda_handler(event, context):
 
 	response = nytimes.get_complete_briefings(message)
 	briefing, pieces = nytimes.parse(response)
-	
+
 	briefing['piece'] = [contentful.create_piece(piece) for piece in pieces]
 	response = contentful.create_briefings(briefing)
 

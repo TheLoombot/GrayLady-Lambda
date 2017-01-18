@@ -35,9 +35,6 @@ def create_asset(image, title, caption):
 
 	return contentful_link(asset_id, 'Asset')
 
-def process_asset(asset_id):
-	return requests.put(process_asset_url % (space_id, asset_id, locale), headers=contentful_headers(''))
-
 def create_piece(piece):
 	print('Creating Piece: %s' % piece['title'])
 	piece['image'] = create_asset(piece['image'], piece.pop('title'), piece['imageCaption'])
@@ -77,10 +74,25 @@ def contentful_link(sys_id, link_type):
 	}
 
 def publish_entry(sys_id):
-	return requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1))
+	print('Publishing Entry: %s' % sys_id)
+	response = requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1))
+
+	print(response.text)
+	return response
 
 def publish_asset(sys_id):
-	return requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2))
+	print('Publishing Assets: %s' % sys_id)
+	response = requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2))
+
+	print(response.text)
+	return response
+
+def process_asset(asset_id):
+	print('Processing Assets: %s' % asset_id)
+	response = requests.put(process_asset_url % (space_id, asset_id, locale), headers=contentful_headers(''))
+
+	print(response.text)
+	return response
 
 def publish_header(version):
 	return dict(contentful_headers(''), **{'X-Contentful-Version': unicode(version)})

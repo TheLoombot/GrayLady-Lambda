@@ -33,10 +33,10 @@ def parse(body):
 			continue
 
 		if [x for x in row.css('em::text, td::text').extract() for y in detection_strings if y in x.strip()]:
-			
-			pieces.append(piece)
-			piece = piece = initiate_piece()
+			if piece.get('title') and piece.get('image'):
+				pieces.append(piece)
 
+			piece = piece = initiate_piece()
 			continue
 
 		if piece.get('image'):
