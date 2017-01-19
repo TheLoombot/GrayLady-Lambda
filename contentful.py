@@ -20,13 +20,14 @@ def create_asset(image, title, caption):
 		'title': title,
 		'description': caption,
 		'file': {
-			'contentType': 'image/jpg',
+			'contentType': 'image/jpeg',
 			'fileName': "briefing 1-%s.jpg" % title,
 			'upload': image
 		}
 	}
 
-	response = requests.post(assets_url, data=contentful_payload(asset), headers=contentful_headers('asset'))
+	response = requests.post(assets_url, data=contentful_payload(asset), headers=contentful_headers(''))
+	print('Create Assets: %s' % response.text)
 	data = json.loads(response.text)
 
 	asset_id = data['sys']['id']
@@ -39,9 +40,10 @@ def create_piece(piece):
 	print('Creating Piece: %s' % piece['title'])
 	piece['image'] = create_asset(piece['image'], piece.pop('title'), piece['imageCaption'])
 
-	response = requests.post(url, data=contentful_payload(piece), headers=contentful_headers('piece'))
-	data = json.loads(response.text)
+	response = post_request(url, contentful_payload(piece), contentful_headers('piece'))
+	print('Creating piece: %s' % response.text)
 
+	data = json.loads(response.text)
 	piece_id = data['sys']['id']
 	publish_entry(piece_id)
 	return contentful_link(piece_id, 'Entry')
@@ -74,25 +76,22 @@ def contentful_link(sys_id, link_type):
 	}
 
 def publish_entry(sys_id):
-	print('Publishing Entry: %s' % sys_id)
 	response = requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1))
-
-	print(response.text)
+	print('Publishing Entry: %s' % response.text)
 	return response
 
 def publish_asset(sys_id):
-	print('Publishing Assets: %s' % sys_id)
 	response = requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2))
-
-	print(response.text)
+	print('Publishing Assets: %s' % response.text)
 	return response
 
 def process_asset(asset_id):
-	print('Processing Assets: %s' % asset_id)
 	response = requests.put(process_asset_url % (space_id, asset_id, locale), headers=contentful_headers(''))
-
-	print(response.text)
 	return response
 
 def publish_header(version):
 	return dict(contentful_headers(''), **{'X-Contentful-Version': unicode(version)})
+
+def post_request(url, payload, headers):
+	response = requests.post(url, data=payload, headers=headers)
+	return response
