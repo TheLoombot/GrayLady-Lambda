@@ -26,11 +26,11 @@ def create_asset(image, title, caption):
 		}
 	}
 
-	response = requests.post(assets_url, data=contentful_payload(asset), headers=contentful_headers(''))
-	print('Create Assets: %s' % response.text)
-	data = json.loads(response.text)
-
+	data = requests.post(assets_url, data=contentful_payload(asset), headers=contentful_headers('')).json()
 	asset_id = data['sys']['id']
+
+	print('Create Assets: %s' % clean(data))
+
 	process_asset(asset_id)
 	publish_asset(asset_id)
 
@@ -40,21 +40,22 @@ def create_piece(piece):
 	print('Creating Piece: %s' % piece['title'])
 	piece['image'] = create_asset(piece['image'], piece.pop('title'), piece['imageCaption'])
 
-	response = post_request(url, contentful_payload(piece), contentful_headers('piece'))
-	print('Creating piece: %s' % response.text)
-
-	data = json.loads(response.text)
+	data = post_request(url, contentful_payload(piece), contentful_headers('piece'))
 	piece_id = data['sys']['id']
+
+	print('Creating piece: %s' % clean(data))
+
 	publish_entry(piece_id)
 	return contentful_link(piece_id, 'Entry')
 
 def create_briefings(briefing):
-	response = requests.post(url, data=contentful_payload(briefing), headers=contentful_headers('briefing'))
-	data = json.loads(response.text)
+	data = requests.post(url, data=contentful_payload(briefing), headers=contentful_headers('briefing')).json()
+
+	print('Creating Briefing: %s' % clean(data))
 
 	briefing_id = data['sys']['id']
 	publish_entry(briefing_id)
-	return response
+	return data
 
 def contentful_headers(content_type):
 	return {
@@ -76,13 +77,15 @@ def contentful_link(sys_id, link_type):
 	}
 
 def publish_entry(sys_id):
-	response = requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1))
-	print('Publishing Entry: %s' % response.text)
+	response = requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1)).json()
+
+	print('Publishing Entry: %s' % clean(response))
 	return response
 
 def publish_asset(sys_id):
-	response = requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2))
-	print('Publishing Assets: %s' % response.text)
+	response = requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2)).json()
+
+	print('Publishing Assets: %s' % clean(response))
 	return response
 
 def process_asset(asset_id):
@@ -93,5 +96,8 @@ def publish_header(version):
 	return dict(contentful_headers(''), **{'X-Contentful-Version': unicode(version)})
 
 def post_request(url, payload, headers):
-	response = requests.post(url, data=payload, headers=headers)
+	response = requests.post(url, data=payload, headers=headers).json()
 	return response
+
+def clean(text):
+	return ' '.join(str(text).split())
