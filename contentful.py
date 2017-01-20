@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 import requests
 import json
+import time
 
 # get this token from this page `	Login to get a token button	`
 # https://www.contentful.com/developers/docs/references/authentication/#the-management-api
@@ -77,18 +78,21 @@ def contentful_link(sys_id, link_type):
 	}
 
 def publish_entry(sys_id):
+	time.sleep(3)
 	response = requests.put(publish_entry_url % (space_id, sys_id), headers=publish_header(1)).json()
 
 	print('Publishing Entry: %s' % clean(response))
 	return response
 
 def publish_asset(sys_id):
+	time.sleep(3)
 	response = requests.put(publish_asset_url % (space_id, sys_id), headers=publish_header(2)).json()
 
 	print('Publishing Assets: %s' % clean(response))
 	return response
 
 def process_asset(asset_id):
+	time.sleep(3)
 	response = requests.put(process_asset_url % (space_id, asset_id, locale), headers=contentful_headers(''))
 	return response
 
@@ -96,6 +100,7 @@ def publish_header(version):
 	return dict(contentful_headers(''), **{'X-Contentful-Version': unicode(version)})
 
 def post_request(url, payload, headers):
+	time.sleep(3)
 	response = requests.post(url, data=payload, headers=headers).json()
 	return response
 
