@@ -33,7 +33,7 @@ def parse(body):
 			piece['image'] = image_tag.replace('-articleLarge.jpg', '-superJumbo.jpg')
 
 			caption = row.css('td span::text').extract_first()
-			piece['imageCaption'] = caption.encode('utf-8').strip() if caption else ' . '
+			piece['imageCaption'] = caption.encode('utf-8').strip() if caption else ''
 
 			continue
 
@@ -48,7 +48,7 @@ def parse(body):
 		headline = row.css('strong::text').extract()
 		if piece.get('image') or headline:
 			inner_html = row.css('td').extract_first()
-			inner_html = clean_tags(['td', 'strong'], inner_html)
+			inner_html = clean_tags(['td'], inner_html)
 
 			if not piece.get('number'):
 				headline = ' '.join(headline)
@@ -56,7 +56,8 @@ def parse(body):
 				piece['number'], piece['title'] = [x.strip() for x in headline.split('.', 1)]
 				piece['number'] = int(piece['number'])
 
-				inner_html = inner_html.split('.', 1)[-1].strip()
+				inner_html = re.sub('>\d. ', '>', inner_html)
+				inner_html = re.sub('</strong>\s*<strong>', '', inner_html)
 
 			piece['pieceTextContent'] += html2text.handle(inner_html) + '<br>'
 
