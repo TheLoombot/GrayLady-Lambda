@@ -33,13 +33,13 @@ def parse(body):
 			piece['image'] = image_tag.replace('-articleLarge.jpg', '-superJumbo.jpg')
 
 			caption = row.css('td span::text').extract_first()
-			piece['imageCaption'] = caption.encode('utf-8').strip() if caption else ''
+			piece['imageCaption'] = caption.encode('utf-8').strip() if caption else ' . '
 
 			continue
 
 		if [x for x in row.css('em::text, td::text').extract() for y in detection_strings if y in x.strip()]:
 			if piece.get('title') and piece.get('image'):
-				piece['pieceTextContent'] = piece['pieceTextContent'].strip()
+				piece['pieceTextContent'] = piece['pieceTextContent'].strip('<br>')
 				pieces.append(piece)
 
 			piece = piece = initiate_piece()
@@ -58,7 +58,7 @@ def parse(body):
 
 				inner_html = inner_html.split('.', 1)[-1].strip()
 
-			piece['pieceTextContent'] += html2text.handle(inner_html) + '\n'
+			piece['pieceTextContent'] += html2text.handle(inner_html) + '<br>'
 
 	return briefing, pieces
 
