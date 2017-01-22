@@ -15,7 +15,8 @@ def lambda_handler(event, context):
 	message = event['Records'][0]['Sns']['Message']
 	print(message)
 
-	message = json.loads(message)
+	if not isinstance(message, dict):
+		message = json.loads(message)
 	content = message['content']
 
 	mail = email.message_from_string(content)
