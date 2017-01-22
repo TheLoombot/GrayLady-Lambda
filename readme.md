@@ -4,7 +4,7 @@
 
 # Deployment
 
-Please open file contentful.py in root directory
+**Note** Please open file contentful.py in root directory for point 1-2-3
 1. access_token = 'ce03285b239a8bebc753266729ec5f8bbaf28dedba2d63721728ce850af99f09'
 -- scroll down and search button with **Login to get a token button** text on [this page][1]
 -- sign in and again scroll down on same location - new token will be there instead of button
@@ -22,7 +22,7 @@ https://app.contentful.com/spaces/**clmzlcmno5rw**/
 -- might be useful for translation in future
 
 4. Just zip everything and upload to lambda
-5. Please change **Handler** in *AWS Lambda* configuration to 'lambda.lambda_handler'
+5. Please change **Handler** in *AWS Lambda* configuration to 'handler.lambda_handler'
 6. In *AWS Lambda* advance settings please change **Timeout** to 5 minutes
 7. *AWS Lambda* is too fast and sometimes second request fires so quicckly that the first request isn't comepletly handled by Contenful -- 3 second delay is add to resolve this issue
 
