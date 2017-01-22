@@ -1,5 +1,6 @@
 # Dependencies
 -- python 2.7
+
 -- all other dependencies are inside of the project
 
 # Deployment
