@@ -56,7 +56,7 @@ def parse(body):
 				piece['number'], piece['title'] = [x.strip() for x in headline.split('.', 1)]
 				piece['number'] = int(piece['number'])
 
-				inner_html = re.sub('>\d. ', '>', inner_html)
+				inner_html = re.sub('>\d{1,2}. ', '>', inner_html)
 				inner_html = re.sub('</strong>\s*<strong>', '', inner_html)
 
 			piece['pieceTextContent'] += html2text.handle(inner_html) + '<br>'
