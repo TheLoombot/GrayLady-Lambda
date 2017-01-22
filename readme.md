@@ -3,6 +3,7 @@
 
 -- all other dependencies are inside of the project
 
+- - - -
 # Deployment
 
 **Note** Please open file contentful.py in root directory for point 1-2-3
@@ -37,6 +38,7 @@
 
 7. *AWS Lambda* is too fast and sometimes second request fires so quicckly that the first request isn't comepletly handled by Contenful -- 3 second delay is add to resolve this issue
 
+- - - -
 # Code
 
 1. *lambda.py*
@@ -55,6 +57,7 @@
 
  -- Contentful creation, process and publishing - everything is done in this file
 
+- - - -
 # Testing
 
 
