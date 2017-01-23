@@ -39,7 +39,7 @@ def parse(body):
 
 		if [x for x in row.css('em::text, td::text').extract() for y in detection_strings if y in x.strip()]:
 			if piece.get('title') and piece.get('image'):
-				piece['pieceTextContent'] = piece['pieceTextContent'].strip('&nbsp;\n')
+				piece['pieceTextContent'] = piece['pieceTextContent'].strip('\n\n')
 				pieces.append(piece)
 
 			piece = piece = initiate_piece()
@@ -59,7 +59,7 @@ def parse(body):
 				inner_html = re.sub('</strong>\s*<strong>', '', inner_html)
 				inner_html = re.sub('>\d{1,2}\s*. ', '>', inner_html)
 
-			piece['pieceTextContent'] += html2text.handle(inner_html) + '&nbsp;\n'
+			piece['pieceTextContent'] += html2text.handle(inner_html).strip() + '\n\n'
 
 	return briefing, pieces
 
