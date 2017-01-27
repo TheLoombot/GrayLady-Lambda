@@ -18,6 +18,11 @@ def parse(body):
 	table = document.xpath(xpath)[-1]
 
 	detection_strings = ['_____', 'Photographs may appear out of order']
+	sanitize_regex = [
+		('</strong>\s*<strong>', ''),
+		('>\d{1,2}\s*. ', '>'),
+		('<strong>\s*</strong>', ''),
+	]
 
 	briefing = {
 		'briefingDate': time.strftime('%Y-%m-%d'),
@@ -39,10 +44,9 @@ def parse(body):
 
 		if [x for x in row.css('em::text, td::text').extract() for y in detection_strings if y in x.strip()]:
 			if piece.get('title') and piece.get('image'):
-				piece['pieceTextContent'] = piece['pieceTextContent'].strip('\n\n')
 				pieces.append(piece)
 
-			piece = piece = initiate_piece()
+			piece = initiate_piece()
 			continue
 
 		headline = row.css('strong::text').extract()
@@ -52,14 +56,16 @@ def parse(body):
 
 			if not piece.get('number'):
 				headline = ' '.join(headline)
-
 				piece['number'], piece['title'] = [x.strip() for x in headline.split('.', 1)]
+
+				for regex in sanitize_regex:
+					inner_html = re.sub(regex[0], regex[1], inner_html)
+
 				piece['number'] = int(piece['number'].replace(' ', ''))
+				if piece['title'] == '':
+					piece['title'] = str(piece['number'])
 
-				inner_html = re.sub('</strong>\s*<strong>', '', inner_html)
-				inner_html = re.sub('>\d{1,2}\s*. ', '>', inner_html)
-
-			piece['pieceTextContent'] += html2text.handle(inner_html).strip() + '\n\n'
+			piece['pieceTextContent'] += ('\n\n' + html2text.handle(inner_html).strip()).strip('\n\n')
 
 	return briefing, pieces
 
