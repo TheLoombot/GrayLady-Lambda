@@ -2,9 +2,12 @@
 
 from parsel import Selector
 import re
-import time
+from datetime import datetime
 import requests
 import quopri
+
+from urllib import urlencode
+from urlparse import urlparse, urlunparse, parse_qs
 
 import html2text
 html2text = html2text.HTML2Text()
@@ -25,7 +28,7 @@ def parse(body):
 	]
 
 	briefing = {
-		'briefingDate': time.strftime('%Y-%m-%d'),
+		'briefingDate': date_time_now_iso_format(),
 		'briefingTitle': table.css('a::text').extract_first().strip(),
 		'briefingAuthor': table.xpath('//h6[contains(text(), "By ")]//text()').extract_first().replace('By ', '').strip()
 	}
@@ -44,6 +47,7 @@ def parse(body):
 
 		if [x for x in row.css('em::text, td::text').extract() for y in detection_strings if y in x.strip()]:
 			if piece.get('title') and piece.get('image'):
+				piece['pieceTextContent'] = piece['pieceTextContent'].strip('\n\n')
 				pieces.append(piece)
 
 			piece = initiate_piece()
@@ -65,7 +69,8 @@ def parse(body):
 				if piece['title'] == '':
 					piece['title'] = str(piece['number'])
 
-			piece['pieceTextContent'] += ('\n\n' + html2text.handle(inner_html).strip()).strip('\n\n')
+			content = '\n\n' + html2text.handle(inner_html).strip()
+			piece['pieceTextContent'] += remove_link_params(content, row)
 
 	return briefing, pieces
 
@@ -76,7 +81,7 @@ def clean_tags(tags, html):
 
 def initiate_piece():
 	return {
-		'date': time.strftime('%Y-%m-%d'),
+		'date': date_time_now_iso_format(),
 		'pieceTextContent': ''
 	}
 
@@ -89,3 +94,21 @@ def get_complete_briefings(body):
 
 	response = requests.get(link)
 	return response.text
+
+def date_time_now_iso_format():
+	return datetime.utcnow().replace(microsecond=0).isoformat() + 'Z'
+
+def remove_link_params(content, row):
+	unwanted_query_tags = ['te', 'nl', 'emc']
+
+	urls = row.css('a::attr(href)').extract()
+	for url in urls:
+		link = urlparse(url)
+
+		query = parse_qs(link.query)
+		for tag in unwanted_query_tags:
+			query.pop(tag)
+
+		link = link._replace(query=urlencode(query, True))
+		content = content.replace(url, urlunparse(link))
+	return content
