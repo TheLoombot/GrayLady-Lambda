@@ -99,7 +99,7 @@ def date_time_now_iso_format():
 	return datetime.utcnow().replace(microsecond=0).isoformat() + 'Z'
 
 def remove_link_params(content, row):
-	unwanted_query_tags = ['te', 'nl', 'emc']
+	unwanted_query_tags = ['te', 'nl', 'emc', '_r']
 
 	urls = row.css('a::attr(href)').extract()
 	for url in urls:
