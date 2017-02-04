@@ -106,8 +106,7 @@ def remove_link_params(content, row):
 		link = urlparse(url)
 
 		query = parse_qs(link.query)
-		for tag in unwanted_query_tags:
-			query.pop(tag)
+		[query.pop(tag) for tag in unwanted_query_tags if tag in query]
 
 		link = link._replace(query=urlencode(query, True))
 		content = content.replace(url, urlunparse(link))
