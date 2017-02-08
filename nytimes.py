@@ -58,6 +58,8 @@ def parse(body):
 			inner_html = row.css('td').extract_first()
 			inner_html = clean_tags(['td'], inner_html)
 
+			inner_html = re.sub('title="(.*?)"', '', inner_html)
+
 			if not piece.get('number'):
 				headline = ' '.join(headline)
 				piece['number'], piece['title'] = [x.strip() for x in headline.split('.', 1)]
