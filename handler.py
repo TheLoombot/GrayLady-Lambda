@@ -20,7 +20,11 @@ def lambda_handler(event, context):
 	content = message['content']
 
 	mail = email.message_from_string(content)
-	message = mail.get_payload()[1].get_payload()
+	multiparts = mail.get_payload()
+	if isinstance(multiparts, str):
+		message = multiparts
+	else:
+		message = multiparts[1].get_payload()
 
 	response = nytimes.get_complete_briefings(message)
 	briefing, pieces = nytimes.parse(response)
