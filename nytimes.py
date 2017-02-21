@@ -27,11 +27,7 @@ def parse(body):
 		('<strong>\s*</strong>', ''),
 	]
 
-	briefing = {
-		'briefingDate': date_time_now_iso_format(),
-		'briefingTitle': table.css('a::text').extract_first().strip(),
-		'briefingAuthor': table.xpath('//h6[contains(text(), "By ")]//text()').extract_first().replace('By ', '').strip()
-	}
+	briefing = create_briefing(table)
 
 	pieces = []
 	piece = initiate_piece()
@@ -75,6 +71,21 @@ def parse(body):
 			piece['pieceTextContent'] += remove_link_params(content, row)
 
 	return briefing, pieces
+
+def create_briefing(document):
+	date = date_time_now_iso_format()
+	title = document.css('a::text').extract_first().strip()
+
+	xpath = '//h6[contains(text(), "By ")]//text()'
+	authors = document.xpath(xpath).extract_first().replace('By ', '').strip()
+
+	briefing = {
+		'briefingDate': date,
+		'briefingTitle': title,
+		'briefingAuthor': authors
+	}
+
+	return briefing
 
 def clean_tags(tags, html):
 	for tag in tags:

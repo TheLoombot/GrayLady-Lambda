@@ -9,6 +9,8 @@ import json
 import nytimes
 import contentful
 import email
+import copy
+import boto3
 
 print('Loading lambda function')
 def lambda_handler(event, context):
@@ -30,11 +32,46 @@ def lambda_handler(event, context):
 	briefing, pieces = nytimes.parse(response)
 
 	briefing['piece'] = []
-	for piece in pieces:
+	for piece in copy.deepcopy(pieces):
 		try:
 			briefing['piece'].append(contentful.create_piece(piece))
 		except Exception, e:
 			continue
 
 	response = contentful.create_briefings(briefing)
-	return message
+	return publish_sns_topic(briefing, pieces)
+
+
+def publish_sns_topic(briefing, pieces):
+	body = {
+		'title': briefing['briefingTitle'],
+		'authors': briefing['briefingAuthor'],
+		'date': briefing['briefingDate'],
+		'image': pieces[0]['image'],
+	}
+
+	alert = {
+		'body': body,
+		'title': 'Title goes Here',
+		'subtitle': 'Sub title here',
+	}
+
+	message = {
+		'default': 'Irrelevant',
+		'APNS_SANDBOX': {
+			'aps': {
+				'alert': alert,
+			}
+		}
+	}
+
+	print('\nSNS Topic: %s' % message)
+	client = boto3.client('sns')
+	response = client.publish(
+		TargetArn='arn:aws:sns:us-east-1:467509107760:outbound_push',
+		Message=json.dumps(message),
+		MessageStructure='json'
+	)
+
+	print('\nSNS Topic Response: %s' % response)
+	return response
